@@ -46,8 +46,29 @@ Conditions:
 
 Resources:
 
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: {"Fn::GetAtt": "ApiLoggingRole.Arn"}
+
+  ApiLoggingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - {"Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"}
+
   LambdaFunction1:
     Type: AWS::Serverless::Function
+    DependsOn: ApiGatewayAccount
     Properties:
       CodeUri: ./{{cookiecutter.package_name}}/
       Handler: handlers.lambda1_handler
